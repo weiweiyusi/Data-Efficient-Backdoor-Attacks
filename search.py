@@ -1,5 +1,6 @@
 import tqdm, torch, os
 import numpy as np
+import pandas as pd
 from torch.utils.data import DataLoader
 import torch.optim as optim
 import torch.nn as nn
@@ -25,6 +26,15 @@ def search(opts):
     shuffle = np.arange(len(train_data.targets))[np.array(train_data.targets) != opts.target]  # select poisoned samples from data of non-target classes only
     np.random.shuffle(shuffle)
     samples_idx = shuffle[:poison_num]  # create random poison samples idx
+
+    # 初始化存储容器
+    metrics = {
+        'epoch': [],
+        'train_acc': [],
+        'val_acc': [],
+        'back_acc': []
+    }
+    forget_events_history = []
 
     for n in range(opts.n_iter):
         print('searching with {:2d} iteration'.format(n))
@@ -101,6 +111,15 @@ def search(opts):
             if opts.disable:
                 print('epoch: {:3d}, train_acc: {:.3f}, val_acc: {:.3f}, back_acc: {:.3f}'.format(epoch, train_acc, val_acc, back_acc))
 
+            # 在每轮迭代中记录数据
+            # 记录指标
+            metrics['epoch'].append(epoch)
+            metrics['train_acc'].append(train_acc)
+            metrics['val_acc'].append(val_acc)
+            metrics['back_acc'].append(back_acc)
+            # 记录遗忘事件
+            forget_events_history.append(forget_events)
+
         correctness = np.concatenate(correctness, axis=1)
         diff = correctness[:, 1:] - correctness[:, :-1]
         forget_events = np.sum(diff == -1, axis=1)
@@ -113,6 +132,8 @@ def search(opts):
         samples_idx = np.concatenate((samples_idx, shuffle[:(poison_num - len(samples_idx))]), axis=0)  # random add new poisoned samples from the pool
 
     np.save(os.path.join(opts.sample_path, '{}.npy'.format(name)), samples_idx)  # save the selected poisoned samples
+    pd.DataFrame(metrics).to_csv(os.path.join(opts.log_path, f'{name}_metrics.csv'), index=False)
+    np.save(os.path.join(opts.log_path, f'{name}_forget_events.npy'), forget_events_history)
 
 
 if __name__ == '__main__':

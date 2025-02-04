@@ -33,6 +33,14 @@ def transfer(opts):
     scheduler = optim.lr_scheduler.MultiStepLR(optimizer, [35, 55], 0.1)
     criterion = nn.CrossEntropyLoss().to(opts.device)
 
+    # 初始化存储容器
+    transfer_metrics = {
+        'epoch': [],
+        'train_acc': [],
+        'val_acc': [],
+        'back_acc': []
+    }
+
     for epoch in range(70):
         trigger.set_mode(0), model.train()
         correct, total, ps, ds = 0, 0, [], []
@@ -86,6 +94,14 @@ def transfer(opts):
         if opts.disable:
             print('epoch: {:3d}, train_acc: {:.3f}, val_acc: {:.3f}, back_acc: {:.3f}'.format(epoch, train_acc, val_acc, back_acc))
 
+        # 记录指标
+        transfer_metrics['epoch'].append(epoch)
+        transfer_metrics['train_acc'].append(train_acc)
+        transfer_metrics['val_acc'].append(val_acc)
+        transfer_metrics['back_acc'].append(back_acc)
+
+    # 保存数据到文件
+    pd.DataFrame(transfer_metrics).to_csv(os.path.join(opts.log_path, f'{name}_transfer_metrics.csv'), index=False)
 
 if __name__ == '__main__':
     opts = get_opts()

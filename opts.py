@@ -4,9 +4,10 @@ import argparse
 def get_opts():
     parser = argparse.ArgumentParser()
     parser.add_argument('--device', type=str, default='cuda:0')
-    parser.add_argument('--disable', type=bool, default=True)
+    parser.add_argument('--disable', type=bool, default=False)
     parser.add_argument('--data_path', type=str, default='/data/xpf/datasets')
     parser.add_argument('--sample_path', type=str, default='./samples')
+    parser.add_argument('--log_path', type=str, default='./logs', help='logs_evaluation')  # 新增参数
 
     parser.add_argument('--data_name', type=str, default='imagenet10', choices=['cifar10', 'imagenet10'])
     parser.add_argument('--model_name', type=str, default='vgg16')
@@ -20,6 +21,7 @@ def get_opts():
     parser.add_argument('--alpha', type=float, default=0.5)
 
     parser.add_argument('--samples_idx', type=str, default='cifar10_vgg16_blended_0_0_0.02_10_0.5')
+    parser.add_argument('--exp_name', type=str, default='default', help='different_logs')  # 新增参数
 
     opts = parser.parse_args()
     return opts
